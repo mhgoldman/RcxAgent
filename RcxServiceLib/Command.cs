@@ -52,11 +52,6 @@ namespace Rcx
 
         public Command(string path, string[] args)
         {
-            if (!File.Exists(path))
-            {
-                throw new ArgumentException(String.Format("The file {0} was not found.", path));
-            }
-
             stdOutSb = new StringBuilder();
             stdErrSb = new StringBuilder();
 
@@ -108,6 +103,11 @@ namespace Rcx
             StandardOutput = stdOutSb.ToString();
 
             return this;
+        }
+
+        public void Kill()
+        {
+            process.Kill();
         }
     }
 }

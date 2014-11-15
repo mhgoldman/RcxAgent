@@ -36,6 +36,11 @@ namespace Rcx
             commands[guid] = new Command(path, args);
         }
 
+        public Dictionary<string, Command> GetCommands()
+        {
+            return commands;
+        }
+
         public Command GetCommand(string guid)
         {
             if (commands[guid] == null)
@@ -44,6 +49,16 @@ namespace Rcx
             }
 
             return commands[guid].Update();
+        }
+
+        public void KillCommand(string guid)
+        {
+            if (commands[guid] == null)
+            {
+                throw new ArgumentException(String.Format("Command with id {0} was not found.", guid));
+            }
+
+            commands[guid].Kill();
         }
     }
 }

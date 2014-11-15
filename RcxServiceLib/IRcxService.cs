@@ -17,8 +17,16 @@ namespace Rcx
         string InvokeCommand(string path, string[] args = null);
 
         [OperationContract]
+        [WebGet(UriTemplate = "/Command", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        Dictionary<string, Command> GetCommands();
+
+        [OperationContract]
         [WebGet(UriTemplate = "/Command/{guid}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Command GetCommand(string guid);
+
+        [OperationContract]
+        [WebInvoke(UriTemplate = "/Command/{guid}", Method = "DELETE", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        void KillCommand(string guid);
 
         [OperationContract]
         [WebGet(UriTemplate = "/File/{*path}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]

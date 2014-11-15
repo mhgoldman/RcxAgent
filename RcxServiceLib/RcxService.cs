@@ -38,7 +38,7 @@ namespace Rcx
 
             try
             {
-                CommandManager.Default.GetCommand(guid);
+                c = CommandManager.Default.GetCommand(guid);
             }
             catch (ArgumentException e)
             {
@@ -50,6 +50,30 @@ namespace Rcx
             }
 
             return c;
+        }
+
+        public void KillCommand(string guid)
+        {
+            Command c = null;
+
+            try
+            {
+                c = CommandManager.Default.GetCommand(guid);
+                c.Kill();
+            }
+            catch (ArgumentException e)
+            {
+                ThrowWebFault(e, HttpStatusCode.NotFound);
+            }
+            catch (Exception e)
+            {
+                ThrowWebFault(e);
+            } 
+        }
+
+        public Dictionary<string, Command> GetCommands()
+        {
+            return CommandManager.Default.GetCommands();
         }
 
         public Stream GetFile(string path)
