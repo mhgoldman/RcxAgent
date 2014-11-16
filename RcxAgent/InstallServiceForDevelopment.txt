@@ -1,0 +1,9 @@
+Run "Developer Command Prompt for VS2012" from Start Menu (as admin)
+
+From RcxAgent project directory (where this file resides):
+
+installutil bin\debug\RcxAgent.exe
+
+To uninstall:
+
+installutil /u bin\debug\RcxAgent.exe

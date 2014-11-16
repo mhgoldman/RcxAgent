@@ -34,8 +34,6 @@ namespace Rcx
 
         public void AddCommand(string guid, string path, string[] args)
         {
-            commands[guid] = new Command(path, args);
-
             if (!commands.TryAdd(guid, new Command(path, args)))
             {
                 throw new ArgumentException(String.Format("Command {0} already exists", guid));
