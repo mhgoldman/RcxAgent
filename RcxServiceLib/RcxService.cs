@@ -8,11 +8,14 @@ using System.IO;
 using System.ServiceModel.Web;
 using System.Net;
 using System.Web;
+using System.Collections.Concurrent;
 
 namespace Rcx
 {
+    [ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Multiple, InstanceContextMode=InstanceContextMode.Single)]
     public class RcxService : IRcxService
     {
+        #region command management
         public string InvokeCommand(string path, string[] args = null)
         {
             string guid = Guid.NewGuid().ToString();
@@ -71,29 +74,25 @@ namespace Rcx
             } 
         }
 
-        public Dictionary<string, Command> GetCommands()
+        public ConcurrentDictionary<string, Command> GetCommands()
         {
             return CommandManager.Default.GetCommands();
         }
+        #endregion
 
+        #region file management
         public Stream GetFile(string path)
         {
-            if (!File.Exists(path))
-            {
-                ThrowWebFault("File Not Found", String.Format("The file {0} was not found.", path), HttpStatusCode.NotFound);
-            }
-
-            FileStream stream = null;
+            Stream stream = null;
+            string filename;
 
             try
             {
-                FileInfo file = new FileInfo(path);
+                stream = FileManager.GetFile(path, out filename);
 
                 OutgoingWebResponseContext responseContext = WebOperationContext.Current.OutgoingResponse;
-                responseContext.Headers.Add("Content-Disposition", String.Format("attachment; filename={0}", file.Name));
-                responseContext.Headers.Add("Content-Type", MimeMapping.GetMimeMapping(file.Name));
-
-                stream = new FileStream(file.FullName, FileMode.Open);
+                responseContext.Headers.Add("Content-Disposition", String.Format("attachment; filename={0}", filename));
+                responseContext.Headers.Add("Content-Type", MimeMapping.GetMimeMapping(filename));
             }
             catch (Exception e)
             {
@@ -105,14 +104,9 @@ namespace Rcx
 
         public void DeleteFile(string path)
         {
-            if (!File.Exists(path))
-            {
-                ThrowWebFault("File Not Found", String.Format("The file {0} was not found.", path), HttpStatusCode.NotFound);
-            }
-
             try
             {
-                File.Delete(path);
+                FileManager.DeleteFile(path);
             }
             catch (UnauthorizedAccessException)
             {
@@ -128,10 +122,7 @@ namespace Rcx
         {
             try
             {
-                using (FileStream targetStream = new FileStream(filename, FileMode.Create, FileAccess.Write))
-                {
-                    stream.CopyTo(targetStream);
-                }
+                FileManager.SendFile(filename, stream);
             }
             catch (Exception e)
             {
@@ -141,10 +132,22 @@ namespace Rcx
 
         public FileSystemItem GetFileSystemItem(string path)
         {
-            return new FileSystemItem(path);
-        }
+            FileSystemItem item = null;
 
-        #region exception helpers
+            try
+            {
+                item = FileManager.GetFileSystemItem(path);
+            }
+            catch (Exception e)
+            {
+                ThrowWebFault(e);
+            }
+
+            return item;
+        }
+        #endregion
+
+        #region helpers
         private void ThrowWebFault(string message, string details, HttpStatusCode statusCode = HttpStatusCode.InternalServerError)
         {
             throw new WebFaultException<WebFaultData>(new WebFaultData(message, details), statusCode);

@@ -3,20 +3,21 @@ using System.IO;
 
 namespace Rcx
 {
-    // NOT USED CURRENTLY
-    public class FileManager
+    public static class FileManager
     {
-        public Stream GetFile(string path)
+        public static Stream GetFile(string path, out string filename)
         {
+            filename = Path.GetFileName(path);
+
             return new FileStream(path, FileMode.Open);
         }
 
-        public void DeleteFile(string path)
+        public static void DeleteFile(string path)
         {
             File.Delete(path);
         }
 
-        public void SendFile(string filename, Stream stream)
+        public static void SendFile(string filename, Stream stream)
         {
             using (FileStream targetStream = new FileStream(filename, FileMode.Create, FileAccess.Write))
             {
@@ -24,7 +25,7 @@ namespace Rcx
             }
         }
 
-        public FileSystemItem GetFileSystemItem(string path)
+        public static FileSystemItem GetFileSystemItem(string path)
         {
             return new FileSystemItem(path);
         }
