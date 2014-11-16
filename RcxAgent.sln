@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RcxAgent", "RcxServiceLib\RcxAgent.csproj", "{15B3E0D2-6217-493A-A690-158C497F5318}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RcxAgent", "RcxAgent\RcxAgent.csproj", "{15B3E0D2-6217-493A-A690-158C497F5318}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
