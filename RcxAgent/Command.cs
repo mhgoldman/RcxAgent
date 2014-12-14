@@ -99,6 +99,8 @@ namespace Rcx
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
 
+            Update();
+
             Log.Information("Created new command {Command}", Guid);
             Log.Verbose("New command properties: {@Command}", this);
         }
@@ -142,7 +144,7 @@ namespace Rcx
                 if (!String.IsNullOrEmpty(outLine.Data))
                 {
                     stdOutSb.Append(Environment.NewLine + outLine.Data);
-                    Log.Verbose("Command {Command} wrote to StdOut: ", Guid, outLine.Data);
+                    Log.Verbose("Command {Command} wrote to StdOut: {Data}", Guid, outLine.Data);
                 }
 
                 Update();
@@ -160,7 +162,7 @@ namespace Rcx
                 if (!String.IsNullOrEmpty(outLine.Data))
                 {
                     stdErrSb.Append(Environment.NewLine + outLine.Data);
-                    Log.Verbose("Command {Command} wrote to StdErr: ", Guid, outLine.Data);
+                    Log.Verbose("Command {Command} wrote to StdErr: {Data}", Guid, outLine.Data);
                 }
 
                 Update();
