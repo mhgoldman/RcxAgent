@@ -5,6 +5,7 @@ using System.ServiceModel.Web;
 using System.Net;
 using System.Web;
 using System.Collections.Concurrent;
+using Serilog;
 
 namespace Rcx
 {
@@ -12,13 +13,14 @@ namespace Rcx
     public class RcxService : IRcxService
     {
         #region command management
-        public string InvokeCommand(string path, string[] args = null)
+        public Command InvokeCommand(string path, string[] args = null, string callbackUrl = null)
         {
+            Command c = null;
             string guid = Guid.NewGuid().ToString();
 
             try
             {
-                CommandManager.Default.AddCommand(guid, path, args);
+                c = CommandManager.Default.AddCommand(guid, path, args, callbackUrl);
             }
             catch (ArgumentException e)
             {
@@ -28,7 +30,7 @@ namespace Rcx
             {
                 ThrowWebFault(e);
             }
-            return guid;
+            return c;
         }
 
         public Command GetCommand(string guid)
@@ -146,12 +148,19 @@ namespace Rcx
         #region helpers
         private void ThrowWebFault(string message, string details, HttpStatusCode statusCode = HttpStatusCode.InternalServerError)
         {
-            throw new WebFaultException<WebFaultData>(new WebFaultData(message, details), statusCode);
+            WebFaultData webFaultData = new WebFaultData(message, details);
+            Exception exception = new WebFaultException<WebFaultData>(webFaultData, statusCode);
+            Log.Error(exception, "Throwing WebFaultException: {@WebFaultData}", webFaultData);
+            throw exception;
+
         }
 
         private void ThrowWebFault(Exception e, HttpStatusCode statusCode = HttpStatusCode.InternalServerError)
         {
-            throw new WebFaultException<WebFaultData>(new WebFaultData(e), statusCode);
+            WebFaultData webFaultData = new WebFaultData(e);
+            Exception exception = new WebFaultException<WebFaultData>(webFaultData, statusCode);
+            Log.Error(exception, "Throwing WebFaultException: {@WebFaultData}", webFaultData);
+            throw exception;
         }
         #endregion
     }

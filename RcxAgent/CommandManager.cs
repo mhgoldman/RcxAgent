@@ -28,12 +28,16 @@ namespace Rcx
             commands = new ConcurrentDictionary<string, Command>();
         }
 
-        public void AddCommand(string guid, string path, string[] args)
+        public Command AddCommand(string guid, string path, string[] args, string callbackUrl = null)
         {
-            if (!commands.TryAdd(guid, new Command(path, args)))
+            Command c = new Command(guid, path, args, callbackUrl);
+
+            if (!commands.TryAdd(guid, c))
             {
                 throw new ArgumentException(String.Format("Command {0} already exists", guid));
             }
+
+            return c;
         }
 
         public ConcurrentDictionary<string, Command> GetCommands()
