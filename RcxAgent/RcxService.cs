@@ -5,6 +5,8 @@ using System.ServiceModel.Web;
 using System.Net;
 using System.Web;
 using System.Collections.Concurrent;
+using Serilog;
+using System.ServiceModel.Channels;
 
 namespace Rcx
 {
@@ -12,13 +14,16 @@ namespace Rcx
     public class RcxService : IRcxService
     {
         #region command management
-        public string InvokeCommand(string path, string[] args = null)
+        public Command InvokeCommand(string path, string[] args = null, string callbackUrl = null)
         {
+            Log.Information("InvokeCommand call from {Ip}", GetClientIp());
+
+            Command c = null;
             string guid = Guid.NewGuid().ToString();
 
             try
             {
-                CommandManager.Default.AddCommand(guid, path, args);
+                c = CommandManager.Default.AddCommand(guid, path, args, callbackUrl);
             }
             catch (ArgumentException e)
             {
@@ -28,11 +33,14 @@ namespace Rcx
             {
                 ThrowWebFault(e);
             }
-            return guid;
+
+            return c;
         }
 
         public Command GetCommand(string guid)
         {
+            Log.Information("GetCommand call for {Guid} from {Ip}", guid, GetClientIp());
+
             Command c = null;
 
             try
@@ -53,6 +61,8 @@ namespace Rcx
 
         public void KillCommand(string guid)
         {
+            Log.Information("KillCommand call for {Guid} from {Ip}", guid, GetClientIp());
+
             Command c = null;
 
             try
@@ -72,6 +82,8 @@ namespace Rcx
 
         public ConcurrentDictionary<string, Command> GetCommands()
         {
+            Log.Information("GetCommands call from {Ip}", GetClientIp());
+
             return CommandManager.Default.GetCommands();
         }
         #endregion
@@ -79,6 +91,8 @@ namespace Rcx
         #region file management
         public Stream GetFile(string path)
         {
+            Log.Information("GetFile call for {Path} from {Ip}", path, GetClientIp());
+
             Stream stream = null;
             string filename;
 
@@ -100,6 +114,8 @@ namespace Rcx
 
         public void DeleteFile(string path)
         {
+            Log.Information("DeleteFile call for #{Path} from {Ip}", path, GetClientIp());
+
             try
             {
                 FileManager.DeleteFile(path);
@@ -116,6 +132,8 @@ namespace Rcx
 
         public void SendFile(string filename, Stream stream)
         {
+            Log.Information("SendFile call for {Filename} from {Ip}", filename, GetClientIp());
+
             try
             {
                 FileManager.SendFile(filename, stream);
@@ -128,6 +146,8 @@ namespace Rcx
 
         public FileSystemItem GetFileSystemItem(string path)
         {
+            Log.Information("GetFileSystemItem call for {Path} from {Ip}", path, GetClientIp());
+
             FileSystemItem item = null;
 
             try
@@ -146,12 +166,27 @@ namespace Rcx
         #region helpers
         private void ThrowWebFault(string message, string details, HttpStatusCode statusCode = HttpStatusCode.InternalServerError)
         {
-            throw new WebFaultException<WebFaultData>(new WebFaultData(message, details), statusCode);
+            WebFaultData webFaultData = new WebFaultData(message, details);
+            Exception exception = new WebFaultException<WebFaultData>(webFaultData, statusCode);
+            Log.Error(exception, "Throwing WebFaultException: {@WebFaultData}", webFaultData);
+            throw exception;
+
         }
 
         private void ThrowWebFault(Exception e, HttpStatusCode statusCode = HttpStatusCode.InternalServerError)
         {
-            throw new WebFaultException<WebFaultData>(new WebFaultData(e), statusCode);
+            WebFaultData webFaultData = new WebFaultData(e);
+            Exception exception = new WebFaultException<WebFaultData>(webFaultData, statusCode);
+            Log.Error(exception, "Throwing WebFaultException: {@WebFaultData}", webFaultData);
+            throw exception;
+        }
+
+        private string GetClientIp()
+        {
+            OperationContext context = OperationContext.Current;
+            MessageProperties prop = context.IncomingMessageProperties;
+            RemoteEndpointMessageProperty endpoint = prop[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
+            return endpoint.Address;
         }
         #endregion
     }

@@ -11,37 +11,37 @@ namespace Rcx
     {
         #region command management
         [OperationContract]
-        [WebInvoke(UriTemplate = "/Command", BodyStyle = WebMessageBodyStyle.Wrapped, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string InvokeCommand(string path, string[] args = null);
+        [WebInvoke(UriTemplate = "/Commands", BodyStyle = WebMessageBodyStyle.Wrapped, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        Command InvokeCommand(string path, string[] args = null, string callbackUrl = null);
 
         [OperationContract]
-        [WebGet(UriTemplate = "/Command", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        [WebGet(UriTemplate = "/Commands", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         ConcurrentDictionary<string, Command> GetCommands();
 
         [OperationContract]
-        [WebGet(UriTemplate = "/Command/{guid}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        [WebGet(UriTemplate = "/Commands/{guid}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Command GetCommand(string guid);
 
         [OperationContract]
-        [WebInvoke(UriTemplate = "/Command/{guid}", Method = "DELETE", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        [WebInvoke(UriTemplate = "/Commands/{guid}", Method = "DELETE", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         void KillCommand(string guid);
         #endregion
 
         #region file management
         [OperationContract]
-        [WebGet(UriTemplate = "/File/{*path}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        [WebGet(UriTemplate = "/Files/{*path}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Stream GetFile(string path);
 
         [OperationContract]
-        [WebInvoke(UriTemplate = "/File/{*path}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        [WebInvoke(UriTemplate = "/Files/{*path}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         void SendFile(string path, Stream data);
 
         [OperationContract]
-        [WebInvoke(UriTemplate = "/File/{*path}", Method = "DELETE", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        [WebInvoke(UriTemplate = "/Files/{*path}", Method = "DELETE", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         void DeleteFile(string path);
 
         [OperationContract]
-        [WebGet(UriTemplate = "/FileSystemItem/{*path}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        [WebGet(UriTemplate = "/FileSystemItems/{*path}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         FileSystemItem GetFileSystemItem(string path);
         #endregion
     }
