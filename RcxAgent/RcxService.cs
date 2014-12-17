@@ -33,6 +33,7 @@ namespace Rcx
             {
                 ThrowWebFault(e);
             }
+
             return c;
         }
 

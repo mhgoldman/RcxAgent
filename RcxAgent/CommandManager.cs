@@ -42,7 +42,6 @@ namespace Rcx
 
         public ConcurrentDictionary<string, Command> GetCommands()
         {
-            Update();
             return commands;
         }
 
@@ -55,7 +54,7 @@ namespace Rcx
                 throw new ArgumentException(String.Format("Command with id {0} was not found.", guid));
             }
 
-            return c.Update();
+            return c;
         }
 
         public void KillCommand(string guid)
@@ -69,15 +68,5 @@ namespace Rcx
 
             c.Kill();
         }
-
-        #region helpers
-        private void Update()
-        {
-            foreach (KeyValuePair<string, Command> kvp in commands)
-            {
-                kvp.Value.Update();
-            }
-        }
-        #endregion
     }
 }
