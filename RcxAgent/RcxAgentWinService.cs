@@ -31,6 +31,7 @@ namespace Rcx
         public RcxAgentWinService()
         {
             ServiceName = "RcxAgentSvc";
+            CanShutdown = true;
         }
 
         public static void Main()
@@ -55,24 +56,46 @@ namespace Rcx
         {
             Log.Information("Starting Windows service {ServiceName}", ServiceName);
 
-            if (serviceHost != null)
+            try
             {
-                serviceHost.Close();
-            }
+                if (serviceHost != null)
+                {
+                    serviceHost.Close();
+                }
 
-            serviceHost = new ServiceHost(typeof(RcxService));
-            serviceHost.Open();
+                serviceHost = new ServiceHost(typeof(RcxService));
+                serviceHost.Open();
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Exception in OnStart");
+            }
         }
 
         protected override void OnStop()
         {
             Log.Information("Stopping Windows service {ServiceName}", ServiceName);
 
-            if (serviceHost != null)
+            try
             {
-                serviceHost.Close();
-                serviceHost = null;
+                if (serviceHost != null)
+                {
+                    serviceHost.Close();
+                    serviceHost = null;
+                }
+
+                CommandManager.Default.OnMayday();
             }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Exception in OnStop");
+            }
+
+        }
+
+        protected override void OnShutdown()
+        {
+            OnStop();
         }
 
         static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

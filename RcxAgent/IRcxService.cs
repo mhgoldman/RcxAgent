@@ -11,8 +11,8 @@ namespace Rcx
     {
         #region command management
         [OperationContract]
-        [WebInvoke(UriTemplate = "/Commands", BodyStyle = WebMessageBodyStyle.Wrapped, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Command InvokeCommand(string path, string[] args = null, string callbackUrl = null);
+        [WebInvoke(UriTemplate = "/Commands", BodyStyle = WebMessageBodyStyle.WrappedRequest, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        Command InvokeCommand(string path, string[] args = null, string callbackUrl = null, string callbackToken = null);
 
         [OperationContract]
         [WebGet(UriTemplate = "/Commands", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
@@ -44,5 +44,12 @@ namespace Rcx
         [WebGet(UriTemplate = "/FileSystemItems/{*path}", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         FileSystemItem GetFileSystemItem(string path);
         #endregion
+
+        #region administrative
+        [OperationContract]
+        [WebGet(UriTemplate = "/Ping", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        string Ping();
+        #endregion
+
     }
 }

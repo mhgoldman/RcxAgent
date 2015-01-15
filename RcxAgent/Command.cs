@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web.Script.Serialization;
 using Serilog;
+using System.Threading.Tasks;
 
 namespace Rcx
 {
@@ -14,7 +15,20 @@ namespace Rcx
     {
         private Process process;
         private StringBuilder stdOutSb, stdErrSb;
-        private object callbackLock;
+
+        [DataMember]
+        public bool Mayday
+        {
+            get;
+            private set;
+        }
+
+        [DataMember]
+        public string CallbackToken
+        {
+            get;
+            private set;
+        }
 
         [DataMember]
         public string Guid
@@ -37,80 +51,63 @@ namespace Rcx
             private set;
         }
 
-        private int _pid;
         [DataMember]
         public int Pid
         {
             get
             {
-                if (_pid == 0)
-                {
-                    _pid = process.Id;
-                }
-
-                return _pid;
+                return process.Id;
             }
 
             private set { } //required by serialization
         }
 
-        private bool _hasExited;
         [DataMember]
         public bool HasExited
         {
             get
             {
-                if (!_hasExited)
-                {
-                    _hasExited = process.HasExited;
-                }
-
-                return _hasExited;
+                return process.HasExited;
             }
 
             private set { } //required by serialization
         }
 
-        private string _standardOutput;
         [DataMember]
         public string StandardOutput
         {
             get
             {
-                _standardOutput = stdOutSb.ToString();
-
-                return _standardOutput;
+                return stdOutSb.ToString();
             }
 
             private set { } //required by serialization
         }
 
-        private string _standardError;
         [DataMember]
         public string StandardError
         {
             get
             {
-                _standardError = stdErrSb.ToString();
-
-                return _standardError;
+                return stdErrSb.ToString();
             }
 
             private set { } //required by serialization
         }
 
-        int _exitCode;
         [DataMember]
         public int ExitCode
         {
             get
             {
-                if (_exitCode == 0 && HasExited)
+                if (HasExited)
                 {
-                    _exitCode = process.ExitCode;
+                    return process.ExitCode;
                 }
-
-                return _exitCode;
+                else
+                {
+                    return -1;
+                }
             }
             private set { } //required by serialization
         }
@@ -127,17 +124,17 @@ namespace Rcx
             set;
         }
 
-        public Command(string guid, string path, string[] args, string callbackUrl = null)
+        public Command(string guid, string path, string[] args, string callbackUrl = null, string callbackToken = null)
         {
             Guid = guid;
             Path = path;
             Args = args;
+            CallbackToken = callbackToken;
 
             stdOutSb = new StringBuilder();
             stdErrSb = new StringBuilder();
 
             Callbacker = new Callbacker(this, callbackUrl);
-            callbackLock = new object();
 
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.FileName = path;
@@ -172,24 +169,26 @@ namespace Rcx
             process.Kill();
         }
 
+        public void OnMayday()
+        {
+            //The service is shutting down. Make a last-ditch attempt to callback one more time and get in one final status...
+            Mayday = true;
+            Callbacker.Run();
+        }
+
         private void RunCallback()
         {
             //While the process is running, we want the callback to run only periodically to provide the latest output.
             //Once the process exits, the output/error data handlers may keep firing as output/errors come back. There's no way to know when that's finished..
             //To ensure that we capture the Command in its final state, we have to transmit the whole thing on every change after the process has exited.
             //The Callbacker helps with this somewhat by ensuring that the callback message being sent isn't identical to the previous one sent.
-            lock (callbackLock)
+            if (HasExited) 
             {
-                Log.Verbose("Got callback lock");
-                if (HasExited) 
-                {
-                    Callbacker.Run();
-                }
-                else
-                {
-                    Callbacker.RunPeriodic();
-                }
-                Log.Verbose("Surrendering callback lock");
+                Task.Run(() => Callbacker.Run());
+            }
+            else
+            {
+                Task.Run(() => Callbacker.RunPeriodic());
             }
         }
 

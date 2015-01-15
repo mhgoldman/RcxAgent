@@ -14,7 +14,7 @@ namespace Rcx
     public class RcxService : IRcxService
     {
         #region command management
-        public Command InvokeCommand(string path, string[] args = null, string callbackUrl = null)
+        public Command InvokeCommand(string path, string[] args = null, string callbackUrl = null, string callbackToken = null)
         {
             Log.Information("InvokeCommand call from {Ip}", GetClientIp());
 
@@ -23,7 +23,7 @@ namespace Rcx
 
             try
             {
-                c = CommandManager.Default.AddCommand(guid, path, args, callbackUrl);
+                c = CommandManager.Default.AddCommand(guid, path, args, callbackUrl, callbackToken);
             }
             catch (ArgumentException e)
             {
@@ -160,6 +160,13 @@ namespace Rcx
             }
 
             return item;
+        }
+        #endregion
+
+        #region administrative
+        public string Ping()
+        {
+            return "Pong";
         }
         #endregion
 

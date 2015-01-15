@@ -70,7 +70,19 @@ namespace Rcx
 
         public FileSystemItem(string path, bool loadChildren=true)
         {
-            //hacky: trailing slash won't come through, but is required to access root of drive
+            Serilog.Log.Debug("Getting path #{Path}", path);
+            //special case: blank path should give list of drives
+            if (String.IsNullOrEmpty(path))
+            {
+                Serilog.Log.Debug("Getting drive list");
+                Children = DriveInfo.GetDrives().Select(d => new FileSystemItem(d.Name, false)).ToList<FileSystemItem>();
+                _typeEnum = FileSystemItemType.Directory;
+                LastModifiedTime = DateTime.Now;
+
+                return;
+            }
+
+            //special case: when accessing root of a drive, trailing slash won't come through, but is required to access root of drive
             if (path.EndsWith(":"))
             {
                 path += @"\";

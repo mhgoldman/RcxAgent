@@ -8,6 +8,11 @@ namespace Rcx
     {
         private ConcurrentDictionary<string, Command> commands;
 
+        private bool Mayday
+        {
+            get; set;
+        }
+
         #region singleton
         private static CommandManager _default;
         public static CommandManager Default
@@ -26,11 +31,17 @@ namespace Rcx
         private CommandManager()
         {
             commands = new ConcurrentDictionary<string, Command>();
+            Mayday = false;
         }
 
-        public Command AddCommand(string guid, string path, string[] args, string callbackUrl = null)
+        public Command AddCommand(string guid, string path, string[] args, string callbackUrl = null, string callbackToken = null)
         {
-            Command c = new Command(guid, path, args, callbackUrl);
+            if (Mayday)
+            {
+                throw new Exception("Cannot add command because the agent is shutting down");
+            }
+
+            Command c = new Command(guid, path, args, callbackUrl, callbackToken);
 
             if (!commands.TryAdd(guid, c))
             {
@@ -67,6 +78,19 @@ namespace Rcx
             }
 
             c.Kill();
+        }
+
+        public void OnMayday()
+        {
+            Mayday = true;
+
+            //TODO - it'd be good to only send mayday message if final callback wasn't already sent.
+            //unfortunately, we can't identify which callback is the final one, so there's no real way to do this.
+            //as a result, this will send mayday messages for every command that's run since the service started.
+            foreach (Command c in commands.Values)
+            {
+                c.OnMayday();
+            }
         }
     }
 }
